@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Box dengan Efek Berkumpul</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 60vh;
+            margin: 0;
+            background: linear-gradient(135deg, #292c34, #1e2026);
+            font-family: Arial, sans-serif;
+            color: white;
+        }
+        .row {
+            display: flex;
+            justify-content: flex-start; /* Mengatur kotak untuk dimulai dari kiri */
+            width: 100%;
+            max-width: 700px;
+            margin-bottom: 20px;
+            flex-wrap: wrap; /* Membuat box tampil dalam beberapa baris */
+        }
+        .box {
+            width: 70px; /* Lebar kotak */
+            height: 50px; /* Tinggi kotak */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #4CAF50;
+            margin: 5px; /* Jarak antar kotak */
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.5s ease, transform 0.5s ease;
+            cursor: pointer; /* Menunjukkan kotak dapat diklik */
+        }
+        .colored-text {
+            font-size: 14px;
+            color: #FFD700;
+        }
+        @keyframes blinkGather {
+            0% { background-color: #4CAF50; }
+            50% { background-color: #FF5733; }
+            100% { background-color: #4CAF50; }
+        }
+        .blink { animation: blinkGather 1s infinite; }
+        .yellow { background-color: yellow !important; }
+        #jam { font-size: 20px; margin-bottom: 20px; }
+        h2 { font-size: 20px; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <h2>PENGOCOKAN DIMULAI JAM 23:00</h2>
+    <h2>PEMENANG DIMULAI JAM 00:00</h2>
+    <div id="jam"></div>
+
+    <div class="container">
+        <div class="row" id="boxesContainer"></div>
+    </div>
+
+    <script>
+        let yellowBoxIndex = 2; // Indeks kotak yang ingin Anda beri warna kuning (1-8)
+        let yellowBoxSet = false;
+        let boxesGathered = false;
+
+        function createBoxes() {
+            const boxesContainer = document.getElementById('boxesContainer');
+            boxesContainer.innerHTML = ''; // Kosongkan container sebelumnya
+            const pesertaCount = localStorage.length; // Jumlah peserta
+            for (let i = 1; i <= pesertaCount; i++) {
+                const nama = localStorage.getItem(`peserta${i}`) || 'Kosong';
+                const box = document.createElement('div');
+                box.className = 'box';
+                box.id = `box${i}`;
+                
+                // Menampilkan nama di dalam kotak
+                box.innerHTML = `<span>${nama}</span><h5 class="colored-text">Kupon</h5>`;
+                
+                boxesContainer.appendChild(box);
+            }
+        }
+
+        function updateBoxes() {
+            const now = new Date();
+            const hours = now.getHours();
+            const minutes = now.getMinutes();
+            const boxes = document.querySelectorAll('.box');
+
+            if (!yellowBoxSet) {
+                // Reset posisi semua box ke semula
+                boxes.forEach(box => {
+                    box.classList.remove('blink');
+                    box.style.backgroundColor = '#4CAF50';
+                });
+
+                // Ketika waktu adalah 23:52, semua box mulai berkumpul dan berkedip
+                if (hours === 13 && minutes === 03) {
+                    boxes.forEach(box => {
+                        box.classList.add('blink');
+                    });
+                    boxesGathered = true;
+                }
+            }
+
+            // Ketika waktu 23:53, box berhenti berkedip
+            if (hours === 13 && minutes === 04 && boxesGathered) {
+                boxes.forEach(box => {
+                    box.classList.remove('blink'); // Hentikan berkedip
+                });
+                // Mengatur kotak kuning sesuai dengan indeks yang diinginkan
+                const targetBox = boxes[yellowBoxIndex - 1]; // Mengambil kotak berdasarkan indeks
+                if (targetBox) {
+                    targetBox.classList.add('yellow'); // Menetapkan warna kuning pada kotak
+                }
+                yellowBoxSet = true; // Menandakan bahwa pemenang sudah ditentukan
+            }
+        }
+
+        function updateClock() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('jam').textContent = `${hours}:${minutes}:${seconds}`;
+        }
+
+        setInterval(updateClock, 1000);
+        setInterval(updateBoxes, 1000);
+        createBoxes(); // Buat box berdasarkan data di localStorage saat halaman dimuat
+    </script>
+</body>
+</html>
